@@ -15,6 +15,8 @@ def init_state():
         st.session_state.answered = False
     if 'feedback' not in st.session_state:
         st.session_state.feedback = ""
+    if 'confetti_triggered' not in st.session_state:
+        st.session_state.confetti_triggered = False
 
 def generate_questions(n=10):
     questions = []
@@ -49,12 +51,44 @@ if st.session_state.current_q < 10:
                 if choice == q['answer']:
                     st.session_state.feedback = "🎉 정답입니다! 축하합니다! 🎊"
                     st.session_state.score += 1
+                    st.session_state.confetti_triggered = True
                 else:
                     st.session_state.feedback = "❌ 틀렸어요! 다시 도전해보세요! 💪"
                 st.session_state.answered = True
 
     if st.session_state.answered:
         st.markdown(f"**{st.session_state.feedback}**")
+
+        if st.session_state.confetti_triggered:
+            st.markdown("""
+            <script>
+            function fireConfetti() {
+                const duration = 2 * 1000;
+                const animationEnd = Date.now() + duration;
+                const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+                function randomInRange(min, max) {
+                  return Math.random() * (max - min) + min;
+                }
+                const interval = setInterval(function() {
+                  const timeLeft = animationEnd - Date.now();
+
+                  if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                  }
+
+                  const particleCount = 50 * (timeLeft / duration);
+                  confetti(Object.assign({}, defaults, {
+                    particleCount,
+                    origin: { x: randomInRange(0, 1), y: Math.random() - 0.2 }
+                  }));
+                }, 250);
+            }
+            fireConfetti();
+            </script>
+            <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+            """, unsafe_allow_html=True)
+            st.session_state.confetti_triggered = False
+
         if st.button("다음 문제로 ▶"):
             st.session_state.current_q += 1
             st.session_state.answered = False
